@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Word = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace WordConsoleApp
 {
-	class Program
+	internal class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
-			string path = @$"{DateTime.Now:yyyyMMddHHmmss}.docx";
+			var path = @$"{DateTime.Now:yyyyMMddHHmmss}.docx";
 
-			string[] address = new string[]
+			string[] address =
 			{
-				"高雄市左營區華夏路390號",
-				"高雄市苓雅區成功一路134號",
-				"高雄市旗津區中洲三路817號",
-				"高雄市鹽埕區五福四路133號",
-				"高雄市楠梓區楠梓新路247號",
-				"高雄市左營區實踐路43號",
+				"新竹科學園區力行六路8號",
+				"新竹科學園區園區二路168號",
+				"台南科學園區南科北路1號之1",
+				"中部科學園區科雅六路1號",
+				"台南科學園區北園二路8號",
+				"新竹科學園區研新一路9號",
 			};
 
 			try
@@ -32,7 +29,7 @@ namespace WordConsoleApp
 					var mainDoc = wordDoc.AddMainDocumentPart();
 					mainDoc.Document = new Document();
 
-					Body body = new Body();
+					var body = new Body();
 					body.Append(CreateParagraphs(address));
 					body.Append(CreateSectionProperties());
 
@@ -47,38 +44,76 @@ namespace WordConsoleApp
 			}
 		}
 
-		static IEnumerable<Paragraph> CreateParagraphs(string[] contents)
+		private static IEnumerable<Paragraph> CreateParagraphs(string[] contents)
 		{
-			for (int i = 0; i < contents.Length - 1; i++)
+			Func<ParagraphProperties> createParagraphPropertiesFunc = () =>
+				new ParagraphProperties(new Justification {Val = JustificationValues.Center});
+			Func<RunProperties> createRunPropertiesFunc = () =>
+				new RunProperties
+				{
+					FontSize = new FontSize {Val = "36"},
+					RunFonts = new RunFonts {EastAsia = "標楷體", Ascii = "Times New Roman"},
+				};
+			Func<Paragraph> createBreakPageFunc = () => new Paragraph
+			(
+				new Run(new ParagraphProperties(new WidowControl()),
+					new Break {Type = BreakValues.Page})
+			);
+
+			for (var i = 0; i < contents.Length - 1; i++)
 			{
 				yield return new Paragraph
 				(
-					new ParagraphProperties(new Justification() { Val = JustificationValues.Center }),
-					new Run(new Text(contents[i]))
+					createParagraphPropertiesFunc(),
+					new Run
+					(
+						createRunPropertiesFunc(),
+						new Text(contents[i])
+					)
 				);
 				yield return new Paragraph
 				(
-					new Run(new ParagraphProperties(new WidowControl()), new Break() { Type = BreakValues.Page })
+					createParagraphPropertiesFunc(),
+					new Run
+					(
+						createRunPropertiesFunc(),
+						new Text("台灣積體電路製造股份有限公司 張忠謀 收")
+					)
 				);
+				yield return createBreakPageFunc();
 			}
+
 			yield return new Paragraph
 			(
-				new ParagraphProperties(new Justification() { Val = JustificationValues.Center }),
-				new Run(new Text(contents[contents.Length - 1]))
+				createParagraphPropertiesFunc(),
+				new Run
+				(
+					createRunPropertiesFunc(),
+					new Text(contents[contents.Length - 1])
+				)
+			);
+			yield return new Paragraph
+			(
+				createParagraphPropertiesFunc(),
+				new Run
+				(
+					createRunPropertiesFunc(),
+					new Text("台灣積體電路製造股份有限公司 張忠謀 收")
+				)
 			);
 		}
 
-		static SectionProperties CreateSectionProperties()
+		private static SectionProperties CreateSectionProperties()
 		{
-			PageSize pageSize = new PageSize
+			var pageSize = new PageSize
 			{
 				Width = 12814,
 				Height = 6804,
 				Code = 6,
-				Orient = PageOrientationValues.Landscape
+				Orient = PageOrientationValues.Landscape,
 			};
 
-			var pageMargin = new PageMargin()
+			var pageMargin = new PageMargin
 			{
 				Left = 284,
 				Top = 284,
@@ -86,14 +121,14 @@ namespace WordConsoleApp
 				Bottom = 284,
 				Header = 851,
 				Footer = 992,
-				Gutter = 0
+				Gutter = 0,
 			};
 
-			var columns = new Columns { Space = "425" };
+			var columns = new Columns {Space = "425"};
 
-			var vAlign = new Word.VerticalTextAlignmentOnPage { Val = VerticalJustificationValues.Center };
+			var vAlign = new VerticalTextAlignmentOnPage {Val = VerticalJustificationValues.Center};
 
-			var docGrid = new Word.DocGrid { Type = DocGridValues.LinesAndChars, LinePitch = 360 };
+			var docGrid = new DocGrid {Type = DocGridValues.LinesAndChars, LinePitch = 360};
 
 			return new SectionProperties(pageSize, pageMargin, columns, vAlign, docGrid);
 		}
