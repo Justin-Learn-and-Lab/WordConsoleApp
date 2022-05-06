@@ -4,7 +4,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace WordConsoleApp
+namespace WordLetterLabConsoleApp
 {
 	internal class Program
 	{
